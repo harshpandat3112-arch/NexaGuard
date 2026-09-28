@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}NexaGuard — Security Workspace{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR EVERYDAY SECURITY CHECK</div>
+    <h1>Pause. Check.<br><span>Browse with confidence.</span></h1>
+    <p>Inspect a link or email for common warning signs. Your scans are analyzed locally and saved to your history.</p>
+</section>
+
+{% if error %}
+<div class="alert">{{ error }}</div>
+{% endif %}
+
+<section class="stats">
+    <div class="stat"><span class="stat-label"><i class="stat-icon scans-icon">↗</i> Total checks</span><strong>{{ total }}</strong><small>Scans completed</small></div>
+    <div class="stat"><span class="stat-label"><i class="stat-icon alert-icon">!</i> Needs attention</span><strong>{{ suspicious }}</strong><small>Flagged for review</small></div>
+    <div class="stat"><span class="stat-label"><i class="stat-icon layers-icon">✳</i> Signals used</span><strong>02</strong><small>Rules + machine learning</small></div>
+</section>
+
+<section class="scanner-grid">
+    <article class="card">
+        <div class="card-topline"><div class="card-icon blue">↗</div><span class="card-kicker">LINK CHECK</span></div>
+        <h2>Check a website</h2>
+        <p>Review a link for suspicious patterns before you open it.</p>
+        <form method="post" action="/scan-url">
+            <label for="url">Website address</label>
+            <input id="url" name="url" type="text" placeholder="https://example.com/login" required>
+            <button type="submit">Check this link <span>→</span></button>
+        </form>
+    </article>
+
+    <article class="card">
+        <div class="card-topline"><div class="card-icon purple">✉</div><span class="card-kicker">EMAIL CHECK</span></div>
+        <h2>Review an email</h2>
+        <p>Inspect an email file and any links it contains for warning signs.</p>
+        <form method="post" action="/scan-eml" enctype="multipart/form-data">
+            <label for="eml_file">Email file <span class="label-hint">.eml format</span></label>
+            <input id="eml_file" name="eml_file" type="file" accept=".eml,message/rfc822" required>
+            <button type="submit">Review this email <span>→</span></button>
+        </form>
+    </article>
+</section>
+
+<section class="panel history">
+    <div class="section-title">
+        <div><span class="section-kicker">YOUR ACTIVITY</span><h2>Recent checks</h2></div>
+        <span class="history-count">{{ total }} total</span>
+    </div>
+    {% if scans %}
+    <div class="table-wrap">
+    <table>
+        <thead><tr><th>CHECK TYPE</th><th>ITEM REVIEWED</th><th>RESULT</th><th>SCORE</th><th>MODEL SIGNAL</th><th>DATE</th></tr></thead>
+        <tbody>
+        {% for scan in scans %}
+        <tr>
+            <td>{{ scan.scan_type }}</td>
+            <td class="target">{{ scan.target }}</td>
+            <td><span class="mini {{ 'bad' if scan.verdict == 'SUSPICIOUS' else 'good' }}">{{ scan.verdict }}</span></td>
+            <td>{{ scan.score }}/100</td>
+            <td>{{ scan.ml_verdict }} ({{ "%.0f"|format(scan.ml_confidence * 100) }}%)</td>
+            <td>{{ scan.created_at }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><span>⌁</span><p>No checks yet</p><small>Your recent link and email checks will appear here.</small></div>
+    {% endif %}
+</section>
+{% endblock %}

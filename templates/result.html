@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Check Result — NexaGuard{% endblock %}
+{% set suspicious = result.verdict == "SUSPICIOUS" %}
+{% set ml_bad = ml.verdict == "SUSPICIOUS" %}
+
+{% block content %}
+<div class="result-head">
+    <a href="/" class="back">← Back to workspace</a>
+    <div class="eyebrow"><span class="eyebrow-dot"></span> {{ scan_type }} CHECK COMPLETE</div>
+    <h1>Here’s what we found</h1>
+    <p class="muted">{{ original }}</p>
+</div>
+
+<section class="result-card {{ 'danger' if suspicious else 'safe' }}">
+    <div class="score">
+        <div class="score-caption">RISK SCORE</div><span>{{ result.score }}</span><small>out of 100</small>
+    </div>
+    <div class="verdict">
+        <div class="pill">{{ result.verdict }}</div>
+        <h2>{{ "Potential phishing indicators found" if suspicious else "No common phishing indicators found" }}</h2>
+        <p>Based on patterns identified during this local check.</p>
+    </div>
+</section>
+
+<section class="details-grid">
+    <article class="panel">
+        <div class="panel-heading"><span class="section-kicker">EXPERIMENTAL SIGNAL</span><h3>Pattern analysis</h3></div>
+        <div class="ml-box {{ 'ml-danger' if ml_bad else 'ml-safe' }}">
+            <strong>{{ ml.verdict }}</strong>
+            <span>Confidence: {{ "%.1f"|format(ml.confidence * 100) }}%</span>
+        </div>
+        <p class="note">This educational model uses a very small sample dataset. Its verdict and confidence can be wrong; use it only as an extra clue.</p>
+    </article>
+
+</section>
+
+<section class="details-grid">
+    <article class="panel">
+        <div class="panel-heading"><span class="section-kicker">SIGNALS FOUND</span><h3>What stood out</h3></div>
+        <ul class="findings">
+        {% for reason in result.reasons %}
+            <li>{{ reason }}</li>
+        {% endfor %}
+        </ul>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading"><span class="section-kicker">CHECK BREAKDOWN</span><h3>Technical details</h3></div>
+        {% for key, value in result.details.items() %}
+        <div class="detail-row">
+            <span>{{ key|replace('_',' ')|title }}</span>
+            <strong>{{ value }}</strong>
+        </div>
+        {% endfor %}
+    </article>
+</section>
+
+{% if result.urls %}
+<section class="panel url-list">
+    <div class="panel-heading"><span class="section-kicker">LINKS IN MESSAGE</span><h3>Links found in this email</h3></div>
+    {% for item in result.urls %}
+    <div class="email-url">
+        <code>{{ item.url }}</code>
+        <span class="{{ 'bad' if item.verdict == 'SUSPICIOUS' else 'good' }}">{{ item.verdict }} · {{ item.score }}/100</span>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+{% endblock %}
